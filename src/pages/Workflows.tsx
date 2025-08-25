@@ -8,6 +8,7 @@ import {
   GitBranch,
   Clock,
   Settings,
+  Eye,
 } from "lucide-react";
 import {
   Card,
@@ -678,6 +679,29 @@ export default function Workflows() {
                 >
                   <Download className="h-4 w-4" />
                   Download
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    alert(
+                      `Workflow: ${workflow.title}\n\nDescription: ${
+                        workflow.description
+                      }\n\nType: ${workflow.type}\nLanguage: ${
+                        workflow.language
+                      }\nComplexity: ${workflow.complexity}\nEstimated Time: ${
+                        workflow.estimatedTime
+                      }\nRating: ${workflow.rating}\nDownloads: ${
+                        workflow.downloads
+                      }\n\nConfiguration:\n${workflow.config.substring(
+                        0,
+                        500
+                      )}${workflow.config.length > 500 ? "..." : ""}`
+                    );
+                  }}
+                >
+                  <Eye className="h-4 w-4" />
+                  View
                 </Button>
                 <Button variant="default" size="sm">
                   <Play className="h-4 w-4" />

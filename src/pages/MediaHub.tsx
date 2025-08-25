@@ -1,6 +1,22 @@
 import { useState } from "react";
-import { Search, Image, Video, Music, Palette, Download, ExternalLink, Star, Filter } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Search,
+  Image,
+  Video,
+  Music,
+  Palette,
+  Download,
+  ExternalLink,
+  Star,
+  Filter,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,9 +26,9 @@ interface MediaTool {
   id: string;
   title: string;
   description: string;
-  category: 'Image' | 'Video' | 'Audio' | 'Design';
+  category: "Image" | "Video" | "Audio" | "Design";
   subcategory: string;
-  type: 'Generator' | 'Editor' | 'Converter' | 'Optimizer' | 'Library';
+  type: "Generator" | "Editor" | "Converter" | "Optimizer" | "Library";
   rating: number;
   isPremium: boolean;
   url: string;
@@ -33,12 +49,18 @@ const mediaTools: MediaTool[] = [
     isPremium: true,
     url: "https://openai.com/dall-e-3",
     tags: ["AI", "Generation", "Creative"],
-    features: ["Text-to-image", "High resolution", "Multiple styles", "Commercial use"]
+    features: [
+      "Text-to-image",
+      "High resolution",
+      "Multiple styles",
+      "Commercial use",
+    ],
   },
   {
     id: "2",
     title: "Unsplash",
-    description: "High-quality stock photos from talented photographers worldwide",
+    description:
+      "High-quality stock photos from talented photographers worldwide",
     category: "Image",
     subcategory: "Stock Photos",
     type: "Library",
@@ -46,12 +68,18 @@ const mediaTools: MediaTool[] = [
     isPremium: false,
     url: "https://unsplash.com",
     tags: ["Stock", "Photography", "Free"],
-    features: ["Free photos", "High resolution", "Commercial use", "API access"]
+    features: [
+      "Free photos",
+      "High resolution",
+      "Commercial use",
+      "API access",
+    ],
   },
   {
     id: "3",
     title: "Photopea",
-    description: "Advanced image editor that works in your browser, similar to Photoshop",
+    description:
+      "Advanced image editor that works in your browser, similar to Photoshop",
     category: "Image",
     subcategory: "Photo Editing",
     type: "Editor",
@@ -59,7 +87,7 @@ const mediaTools: MediaTool[] = [
     isPremium: false,
     url: "https://photopea.com",
     tags: ["Editor", "Photoshop", "Browser"],
-    features: ["Layer support", "PSD files", "Advanced tools", "Free to use"]
+    features: ["Layer support", "PSD files", "Advanced tools", "Free to use"],
   },
   {
     id: "4",
@@ -72,12 +100,18 @@ const mediaTools: MediaTool[] = [
     isPremium: false,
     url: "https://tinypng.com",
     tags: ["Compression", "Optimization", "PNG", "JPEG"],
-    features: ["Lossless compression", "Batch processing", "API available", "Web optimization"]
+    features: [
+      "Lossless compression",
+      "Batch processing",
+      "API available",
+      "Web optimization",
+    ],
   },
   {
     id: "5",
     title: "Canva",
-    description: "Graphic design platform with templates for social media, presentations, and more",
+    description:
+      "Graphic design platform with templates for social media, presentations, and more",
     category: "Image",
     subcategory: "Graphic Design",
     type: "Editor",
@@ -85,7 +119,12 @@ const mediaTools: MediaTool[] = [
     isPremium: true,
     url: "https://canva.com",
     tags: ["Design", "Templates", "Social Media"],
-    features: ["Drag-and-drop", "Templates", "Team collaboration", "Brand kits"]
+    features: [
+      "Drag-and-drop",
+      "Templates",
+      "Team collaboration",
+      "Brand kits",
+    ],
   },
 
   // Video Tools
@@ -100,12 +139,18 @@ const mediaTools: MediaTool[] = [
     isPremium: true,
     url: "https://runwayml.com",
     tags: ["AI", "Video Generation", "Machine Learning"],
-    features: ["Text-to-video", "Video editing", "Motion graphics", "Green screen"]
+    features: [
+      "Text-to-video",
+      "Video editing",
+      "Motion graphics",
+      "Green screen",
+    ],
   },
   {
     id: "7",
     title: "DaVinci Resolve",
-    description: "Professional video editing, color correction, and audio post-production",
+    description:
+      "Professional video editing, color correction, and audio post-production",
     category: "Video",
     subcategory: "Video Editing",
     type: "Editor",
@@ -113,7 +158,12 @@ const mediaTools: MediaTool[] = [
     isPremium: false,
     url: "https://blackmagicdesign.com/products/davinciresolve",
     tags: ["Professional", "Editing", "Color Grading"],
-    features: ["Professional editing", "Color correction", "Audio editing", "Free version"]
+    features: [
+      "Professional editing",
+      "Color correction",
+      "Audio editing",
+      "Free version",
+    ],
   },
   {
     id: "8",
@@ -126,7 +176,12 @@ const mediaTools: MediaTool[] = [
     isPremium: true,
     url: "https://loom.com",
     tags: ["Screen Recording", "Work", "Communication"],
-    features: ["Quick recording", "Instant sharing", "Transcription", "Analytics"]
+    features: [
+      "Quick recording",
+      "Instant sharing",
+      "Transcription",
+      "Analytics",
+    ],
   },
   {
     id: "9",
@@ -139,7 +194,12 @@ const mediaTools: MediaTool[] = [
     isPremium: false,
     url: "https://handbrake.fr",
     tags: ["Conversion", "Compression", "Open Source"],
-    features: ["Format conversion", "Batch processing", "Quality presets", "Free software"]
+    features: [
+      "Format conversion",
+      "Batch processing",
+      "Quality presets",
+      "Free software",
+    ],
   },
 
   // Audio Tools
@@ -154,12 +214,18 @@ const mediaTools: MediaTool[] = [
     isPremium: false,
     url: "https://audacityteam.org",
     tags: ["Audio Editing", "Recording", "Open Source"],
-    features: ["Multi-track editing", "Effects", "Analysis tools", "Cross-platform"]
+    features: [
+      "Multi-track editing",
+      "Effects",
+      "Analysis tools",
+      "Cross-platform",
+    ],
   },
   {
     id: "11",
     title: "ElevenLabs",
-    description: "AI voice generation and cloning with realistic speech synthesis",
+    description:
+      "AI voice generation and cloning with realistic speech synthesis",
     category: "Audio",
     subcategory: "Voice Synthesis",
     type: "Generator",
@@ -167,7 +233,12 @@ const mediaTools: MediaTool[] = [
     isPremium: true,
     url: "https://elevenlabs.io",
     tags: ["AI", "Voice", "Text-to-Speech"],
-    features: ["Voice cloning", "Multi-language", "Realistic speech", "API access"]
+    features: [
+      "Voice cloning",
+      "Multi-language",
+      "Realistic speech",
+      "API access",
+    ],
   },
   {
     id: "12",
@@ -180,7 +251,12 @@ const mediaTools: MediaTool[] = [
     isPremium: true,
     url: "https://adobe.com/products/audition",
     tags: ["Professional", "Adobe", "Audio Production"],
-    features: ["Spectral editing", "Multitrack mixing", "Audio restoration", "Integration"]
+    features: [
+      "Spectral editing",
+      "Multitrack mixing",
+      "Audio restoration",
+      "Integration",
+    ],
   },
 
   // Design Tools
@@ -195,7 +271,12 @@ const mediaTools: MediaTool[] = [
     isPremium: true,
     url: "https://figma.com",
     tags: ["UI/UX", "Collaboration", "Prototyping"],
-    features: ["Real-time collaboration", "Prototyping", "Design systems", "Developer handoff"]
+    features: [
+      "Real-time collaboration",
+      "Prototyping",
+      "Design systems",
+      "Developer handoff",
+    ],
   },
   {
     id: "14",
@@ -208,12 +289,18 @@ const mediaTools: MediaTool[] = [
     isPremium: false,
     url: "https://coolors.co",
     tags: ["Colors", "Palette", "Design"],
-    features: ["Palette generation", "Color extraction", "Accessibility", "Export options"]
+    features: [
+      "Palette generation",
+      "Color extraction",
+      "Accessibility",
+      "Export options",
+    ],
   },
   {
     id: "15",
     title: "Dribbble",
-    description: "Design inspiration and portfolio platform for creative professionals",
+    description:
+      "Design inspiration and portfolio platform for creative professionals",
     category: "Design",
     subcategory: "Inspiration",
     type: "Library",
@@ -221,15 +308,35 @@ const mediaTools: MediaTool[] = [
     isPremium: true,
     url: "https://dribbble.com",
     tags: ["Inspiration", "Portfolio", "Community"],
-    features: ["Design showcase", "Job board", "Community", "Pro features"]
-  }
+    features: ["Design showcase", "Job board", "Community", "Pro features"],
+  },
 ];
 
 const categories = [
-  { id: "Image", label: "Image Tools", icon: Image, count: mediaTools.filter(t => t.category === "Image").length },
-  { id: "Video", label: "Video Tools", icon: Video, count: mediaTools.filter(t => t.category === "Video").length },
-  { id: "Audio", label: "Audio Tools", icon: Music, count: mediaTools.filter(t => t.category === "Audio").length },
-  { id: "Design", label: "Design Tools", icon: Palette, count: mediaTools.filter(t => t.category === "Design").length }
+  {
+    id: "Image",
+    label: "Image Tools",
+    icon: Image,
+    count: mediaTools.filter((t) => t.category === "Image").length,
+  },
+  {
+    id: "Video",
+    label: "Video Tools",
+    icon: Video,
+    count: mediaTools.filter((t) => t.category === "Video").length,
+  },
+  {
+    id: "Audio",
+    label: "Audio Tools",
+    icon: Music,
+    count: mediaTools.filter((t) => t.category === "Audio").length,
+  },
+  {
+    id: "Design",
+    label: "Design Tools",
+    icon: Palette,
+    count: mediaTools.filter((t) => t.category === "Design").length,
+  },
 ];
 
 export default function MediaHub() {
@@ -237,10 +344,13 @@ export default function MediaHub() {
   const [selectedCategory, setSelectedCategory] = useState("Image");
   const [showPremiumOnly, setShowPremiumOnly] = useState(false);
 
-  const filteredTools = mediaTools.filter(tool => {
-    const matchesSearch = tool.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         tool.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         tool.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredTools = mediaTools.filter((tool) => {
+    const matchesSearch =
+      tool.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tool.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tool.tags.some((tag) =>
+        tag.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     const matchesCategory = tool.category === selectedCategory;
     const matchesPremium = !showPremiumOnly || tool.isPremium;
     return matchesSearch && matchesCategory && matchesPremium;
@@ -248,12 +358,18 @@ export default function MediaHub() {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'Generator': return 'bg-green-500/10 text-green-500 border-green-500/20';
-      case 'Editor': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      case 'Converter': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
-      case 'Optimizer': return 'bg-orange-500/10 text-orange-500 border-orange-500/20';
-      case 'Library': return 'bg-pink-500/10 text-pink-500 border-pink-500/20';
-      default: return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
+      case "Generator":
+        return "bg-green-500/10 text-green-500 border-green-500/20";
+      case "Editor":
+        return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+      case "Converter":
+        return "bg-purple-500/10 text-purple-500 border-purple-500/20";
+      case "Optimizer":
+        return "bg-orange-500/10 text-orange-500 border-orange-500/20";
+      case "Library":
+        return "bg-pink-500/10 text-pink-500 border-pink-500/20";
+      default:
+        return "bg-gray-500/10 text-gray-500 border-gray-500/20";
     }
   };
 
@@ -264,10 +380,17 @@ export default function MediaHub() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Media Hub</h1>
-            <p className="text-muted-foreground">Image generation, video tools, audio processing, and design resources</p>
+            <p className="text-muted-foreground">
+              Image generation, video tools, audio processing, and design
+              resources
+            </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowPremiumOnly(!showPremiumOnly)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPremiumOnly(!showPremiumOnly)}
+            >
               <Filter className="h-4 w-4" />
               {showPremiumOnly ? "All Tools" : "Premium Only"}
             </Button>
@@ -292,7 +415,11 @@ export default function MediaHub() {
           {categories.map((category) => {
             const IconComponent = category.icon;
             return (
-              <TabsTrigger key={category.id} value={category.id} className="flex items-center gap-2">
+              <TabsTrigger
+                key={category.id}
+                value={category.id}
+                className="flex items-center gap-2"
+              >
                 <IconComponent className="h-4 w-4" />
                 <span className="hidden sm:inline">{category.label}</span>
                 <Badge variant="secondary" className="text-xs">
@@ -307,7 +434,10 @@ export default function MediaHub() {
           <TabsContent key={category.id} value={category.id} className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTools.map((tool) => (
-                <Card key={tool.id} className="group hover:shadow-lg transition-all duration-200">
+                <Card
+                  key={tool.id}
+                  className="group hover:shadow-lg transition-all duration-200"
+                >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -341,7 +471,10 @@ export default function MediaHub() {
                       <div className="text-sm font-medium">Key Features:</div>
                       <div className="grid grid-cols-2 gap-1 text-xs">
                         {tool.features.slice(0, 4).map((feature, index) => (
-                          <div key={index} className="flex items-center gap-1 text-muted-foreground">
+                          <div
+                            key={index}
+                            className="flex items-center gap-1 text-muted-foreground"
+                          >
                             <div className="w-1 h-1 bg-primary rounded-full" />
                             {feature}
                           </div>
@@ -352,7 +485,11 @@ export default function MediaHub() {
                     {/* Tags */}
                     <div className="flex flex-wrap gap-1">
                       {tool.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="text-xs"
+                        >
                           {tag}
                         </Badge>
                       ))}
@@ -370,11 +507,11 @@ export default function MediaHub() {
                     </div>
 
                     {/* Action */}
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="w-full"
-                      onClick={() => window.open(tool.url, '_blank')}
+                      onClick={() => window.open(tool.url, "_blank")}
                     >
                       <ExternalLink className="h-4 w-4" />
                       Visit Tool
@@ -386,7 +523,9 @@ export default function MediaHub() {
 
             {filteredTools.length === 0 && (
               <div className="text-center py-12">
-                <div className="text-muted-foreground">No media tools found matching your search.</div>
+                <div className="text-muted-foreground">
+                  No media tools found matching your search.
+                </div>
               </div>
             )}
           </TabsContent>
@@ -397,25 +536,36 @@ export default function MediaHub() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{mediaTools.length}</div>
+            <div className="text-2xl font-bold text-primary">
+              {mediaTools.length}
+            </div>
             <div className="text-sm text-muted-foreground">Total Tools</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{mediaTools.filter(t => !t.isPremium).length}</div>
+            <div className="text-2xl font-bold text-primary">
+              {mediaTools.filter((t) => !t.isPremium).length}
+            </div>
             <div className="text-sm text-muted-foreground">Free Tools</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{mediaTools.filter(t => t.isPremium).length}</div>
+            <div className="text-2xl font-bold text-primary">
+              {mediaTools.filter((t) => t.isPremium).length}
+            </div>
             <div className="text-sm text-muted-foreground">Premium Tools</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{(mediaTools.reduce((sum, t) => sum + t.rating, 0) / mediaTools.length).toFixed(1)}</div>
+            <div className="text-2xl font-bold text-primary">
+              {(
+                mediaTools.reduce((sum, t) => sum + t.rating, 0) /
+                mediaTools.length
+              ).toFixed(1)}
+            </div>
             <div className="text-sm text-muted-foreground">Avg Rating</div>
           </CardContent>
         </Card>
