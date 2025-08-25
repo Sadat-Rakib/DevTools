@@ -17,18 +17,29 @@ import {
   Clock,
   Lock,
   Database,
+  CheckSquare,
+  Timer,
+  FolderOpen,
+  Bot,
+  LayoutDashboard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useDemo } from "@/contexts/DemoContext";
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const mainNavItems = [
+const publicNavItems = [
   { title: "Home", href: "/", icon: Home },
+  { title: "Pricing", href: "/pricing", icon: CreditCard },
+];
+
+const authenticatedNavItems = [
+  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { title: "Pricing", href: "/pricing", icon: CreditCard },
 ];
 
@@ -43,10 +54,17 @@ const toolCategories = [
     ]
   },
   {
+    title: "Productivity",
+    tools: [
+      { title: "Todo Manager", href: "/tools/todo", icon: CheckSquare },
+      { title: "Pomodoro Timer", href: "/tools/pomodoro", icon: Timer },
+    ]
+  },
+  {
     title: "Utilities",
     tools: [
       { title: "Timestamp Converter", href: "/tools/timestamp", icon: Clock },
-      { title: "SQL Formatter", href: "/tools/sql", icon: Database },
+      { title: "SQL Formatter", href: "/tools/sql-formatter", icon: Database },
     ]
   }
 ];
@@ -55,6 +73,8 @@ const hubItems = [
   { title: "Prompt Vault", href: "/prompts", icon: BookOpen },
   { title: "Resources", href: "/resources", icon: Wrench },
   { title: "Workflows", href: "/workflows", icon: Workflow },
+  { title: "Assets Library", href: "/assets", icon: FolderOpen },
+  { title: "AI Assistant", href: "/ai-assistant", icon: Bot },
   { title: "Media Hub", href: "/media", icon: Image },
   { title: "Marketing Hub", href: "/marketing", icon: TrendingUp },
   { title: "Career Hub", href: "/career", icon: Briefcase },
@@ -62,7 +82,8 @@ const hubItems = [
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const location = useLocation();
-  const [openCategories, setOpenCategories] = useState<string[]>(["Text & Data"]);
+  const { user } = useDemo();
+  const [openCategories, setOpenCategories] = useState<string[]>(["Text & Data", "Productivity"]);
 
   const toggleCategory = (category: string) => {
     setOpenCategories(prev =>
@@ -95,7 +116,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <nav className="h-full overflow-y-auto p-4 space-y-6">
           {/* Main Navigation */}
           <div className="space-y-2">
-            {mainNavItems.map((item) => (
+            {(user ? authenticatedNavItems : publicNavItems).map((item) => (
               <NavLink
                 key={item.href}
                 to={item.href}
@@ -158,27 +179,29 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
 
           {/* Hubs */}
-          <div>
-            <h3 className="px-3 mb-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Hubs
-            </h3>
-            <div className="space-y-1">
-              {hubItems.map((item) => (
-                <NavLink
-                  key={item.href}
-                  to={item.href}
-                  onClick={onClose}
-                  className={cn(
-                    "nav-link",
-                    isActiveLink(item.href) && "nav-link-active"
-                  )}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.title}
-                </NavLink>
-              ))}
+          {user && (
+            <div>
+              <h3 className="px-3 mb-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Hubs
+              </h3>
+              <div className="space-y-1">
+                {hubItems.map((item) => (
+                  <NavLink
+                    key={item.href}
+                    to={item.href}
+                    onClick={onClose}
+                    className={cn(
+                      "nav-link",
+                      isActiveLink(item.href) && "nav-link-active"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.title}
+                  </NavLink>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </nav>
       </aside>
     </>
