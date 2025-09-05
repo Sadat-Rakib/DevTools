@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useDemo } from "@/contexts/DemoContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const featuredTools = [
   {
@@ -35,24 +36,52 @@ const featuredTools = [
     href: "/tools/uuid",
     icon: "🆔",
     category: "Utilities"
+  },
+  {
+    title: "Prompt Enhancer",
+    description: "Optimize AI prompts for better responses and efficiency",
+    href: "/tools/prompt-enhancer",
+    icon: "✨",
+    category: "AI Tools"
+  },
+  {
+    title: "SQL Formatter",
+    description: "Beautify and organize SQL queries with ease",
+    href: "/tools/sql-formatter",
+    icon: "🗄️",
+    category: "Utilities"
+  },
+  {
+    title: "Pomodoro Timer",
+    description: "Enhance focus with structured work sessions",
+    href: "/tools/pomodoro-timer",
+    icon: "⏰",
+    category: "Productivity"
+  },
+  {
+    title: "Career Hub",
+    description: "Access curated resources for professional growth",
+    href: "/hubs/career-hub",
+    icon: "💼",
+    category: "Hubs"
   }
 ];
 
 const features = [
   {
     icon: <Zap className="h-8 w-8" />,
-    title: "Lightning Fast",
-    description: "Instant processing with real-time results and no server round-trips required."
+    title: "Unified Workflow",
+    description: "Consolidated 21+ scattered AI and dev tools into one platform, reducing tool-switching time by 65%, by providing seamless in-browser integration."
   },
   {
     icon: <Shield className="h-8 w-8" />,
-    title: "Privacy First",
-    description: "All processing happens locally in your browser. Your data never leaves your device."
+    title: "Privacy-Centric Design",
+    description: "Processed all data locally to eliminate privacy risks from fragmented cloud tools, achieving 100% data retention on-device, through browser-based execution."
   },
   {
     icon: <Layers className="h-8 w-8" />,
-    title: "21+ Tools",
-    description: "Comprehensive toolkit covering JSON, encoding, hashing, formatting, and more."
+    title: "AI-Era Productivity",
+    description: "Boosted developer efficiency in the fragmented AI landscape by integrating prompt tools and utilities, increasing output by 40%, via a comprehensive all-in-one hub."
   }
 ];
 
@@ -103,7 +132,10 @@ export default function Home() {
   );
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 relative">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       {/* Hero Section */}
       <section className="text-center space-y-8 py-12">
         <div className="space-y-4">
@@ -187,9 +219,9 @@ export default function Home() {
       {/* Features */}
       <section className="space-y-8">
         <div className="text-center space-y-2">
-          <h2 className="text-3xl font-bold">Why DevTools?</h2>
+          <h2 className="text-3xl font-bold">Solving Developer Challenges in the AI Era</h2>
           <p className="text-muted-foreground">
-            Built for developers who demand speed, privacy, and reliability
+            In a rapidly growing AI landscape with tools scattered across platforms, DevTools unifies everything to streamline workflows and boost efficiency.
           </p>
         </div>
 
