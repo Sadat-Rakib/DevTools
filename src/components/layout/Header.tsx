@@ -3,7 +3,7 @@ import { Search, Menu, Settings, User, LogOut, CreditCard, UserCircle } from "lu
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useDemo } from "@/contexts/DemoContext";
+import { useAuth } from "@/contexts/AuthContext"; // Replace useDemo with useAuth
 import { useNavigate, Link } from "react-router-dom";
 import {
   DropdownMenu,
@@ -20,12 +20,11 @@ interface HeaderProps {
 
 export function Header({ onToggleSidebar }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const { user, isGuest, logout } = useDemo();
+  const { session, signOut } = useAuth(); // Replace user, isGuest, logout with session and signOut
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    signOut().then(() => navigate('/login')); // Update logout to use signOut and redirect to /login
   };
 
   return (
@@ -41,7 +40,7 @@ export function Header({ onToggleSidebar }: HeaderProps) {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          
+
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-gradient-tech flex items-center justify-center">
               <span className="text-white font-bold text-sm">DT</span>
@@ -64,8 +63,8 @@ export function Header({ onToggleSidebar }: HeaderProps) {
         {/* Right side */}
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          
-          {user || isGuest ? (
+
+          {session ? (
             <>
               <Link to="/settings">
                 <Button variant="ghost" size="sm">
@@ -73,56 +72,47 @@ export function Header({ onToggleSidebar }: HeaderProps) {
                 </Button>
               </Link>
 
-              {user && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.isDemo ? undefined : ""} alt="User" />
-                        <AvatarFallback>
-                          {user.name?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end">
-                    <div className="px-2 py-1.5 text-sm font-medium">
-                      {user.email} {user.isDemo && "(Demo)"}
-                    </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile" className="flex items-center">
-                        <UserCircle className="mr-2 h-4 w-4" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/billing" className="flex items-center">
-                        <CreditCard className="mr-2 h-4 w-4" />
-                        Billing
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/settings" className="flex items-center">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="flex items-center text-red-600">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Log out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-
-              {isGuest && (
-                <Button variant="ghost" size="sm" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Exit
-                </Button>
-              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={session.user.user_metadata?.avatar_url || ""} alt="User" />
+                      <AvatarFallback>
+                        {session.user.email?.charAt(0).toUpperCase() || <User className="h-4 w-4" />}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end">
+                  <div className="px-2 py-1.5 text-sm font-medium">
+                    {session.user.email}
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center">
+                      <UserCircle className="mr-2 h-4 w-4" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/billing" className="flex items-center">
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Billing
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings" className="flex items-center">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="flex items-center text-red-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <div className="flex items-center gap-2">

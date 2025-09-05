@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
-import { useDemo } from '@/contexts/DemoContext';
+import { useAuth } from '@/contexts/AuthContext'; // Replace useDemo with useAuth
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Code2, 
-  Hash, 
-  FileText, 
-  Clock, 
-  BookOpen, 
-  CheckSquare, 
-  Timer, 
+import {
+  Code2,
+  Hash,
+  FileText,
+  Clock,
+  BookOpen,
+  CheckSquare,
+  Timer,
   Quote,
   TrendingUp,
   Users,
@@ -20,7 +20,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase'; // Add supabase import
 
 interface QuickStats {
   totalPrompts: number;
@@ -30,7 +30,7 @@ interface QuickStats {
 }
 
 export default function Dashboard() {
-  const { user } = useDemo();
+  const { session } = useAuth(); // Replace user with session
   const [stats, setStats] = useState<QuickStats>({
     totalPrompts: 0,
     totalTodos: 0,
@@ -42,17 +42,17 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [user]);
+  }, [session]);
 
   const fetchDashboardData = async () => {
-    if (!user) return;
+    if (!session?.user) return;
 
     try {
       // Fetch user statistics
       const [promptsResult, todosResult, pomodoroResult, quoteResult] = await Promise.all([
-        supabase.from('prompts').select('id').eq('user_id', user.id),
-        supabase.from('todos').select('id, status').eq('user_id', user.id),
-        supabase.from('pomodoro_sessions').select('id').eq('user_id', user.id).eq('completed', true),
+        supabase.from('prompts').select('id').eq('user_id', session.user.id),
+        supabase.from('todos').select('id, status').eq('user_id', session.user.id),
+        supabase.from('pomodoro_sessions').select('id').eq('user_id', session.user.id).eq('completed', true),
         supabase.from('quotes').select('text, author').limit(1).order('created_at', { ascending: false }),
       ]);
 
@@ -155,7 +155,7 @@ export default function Dashboard() {
       <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:space-y-0">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Welcome back, {user?.name || user?.email?.split('@')[0] || 'User'}!
+            Welcome back, {session?.user.user_metadata?.name || session?.user.email?.split('@')[0] || 'User'}!
           </h1>
           <p className="text-muted-foreground">
             Here's what's happening with your development toolkit today.
@@ -163,7 +163,7 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary">
-            {user?.isDemo ? 'DEMO' : 'FREE'} Plan
+            {session?.user.user_metadata?.plan || 'FREE'} Plan
           </Badge>
         </div>
       </div>

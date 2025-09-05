@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { ArrowRight, Zap, Shield, Layers, Search, Star, User, UserCheck } from "lucide-react";
+import { ArrowRight, Zap, Shield, Layers, Search, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { NavLink, useNavigate } from "react-router-dom";
-import { useDemo } from "@/contexts/DemoContext";
+import { NavLink } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const featuredTools = [
@@ -85,43 +84,6 @@ const features = [
   }
 ];
 
-// Demo Mode Button Component
-function DemoModeButton() {
-  const { enterDemoMode } = useDemo();
-  const navigate = useNavigate();
-
-  const handleDemoMode = () => {
-    enterDemoMode();
-    navigate('/demo-dashboard');
-  };
-
-  return (
-    <Button size="lg" className="text-base px-8" onClick={handleDemoMode}>
-      <UserCheck className="mr-2 h-5 w-5" />
-      Enter Demo Mode
-      <ArrowRight className="ml-2 h-5 w-5" />
-    </Button>
-  );
-}
-
-// Guest Mode Button Component  
-function GuestModeButton() {
-  const { continueAsGuest } = useDemo();
-  const navigate = useNavigate();
-
-  const handleGuestMode = () => {
-    continueAsGuest();
-    navigate('/tools/json-viewer');
-  };
-
-  return (
-    <Button size="lg" variant="outline" className="text-base px-8" onClick={handleGuestMode}>
-      <User className="mr-2 h-5 w-5" />
-      Continue as Guest
-    </Button>
-  );
-}
-
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -143,22 +105,31 @@ export default function Home() {
             <Star className="h-4 w-4 text-primary" />
             Ultimate Developer Productivity Toolkit
           </div>
-          
+
           <h1 className="hero-text">
             DevTools for
             <br />
             Modern Developers
           </h1>
-          
+
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            21+ essential developer tools, prompt vault, and productivity hubs. 
+            21+ essential developer tools, prompt vault, and productivity hubs.
             Everything you need to code faster and smarter.
           </p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <DemoModeButton />
-          <GuestModeButton />
+          <Button size="lg" className="text-base px-8" asChild>
+            <NavLink to="/signup">
+              Get Started
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </NavLink>
+          </Button>
+          <Button size="lg" variant="outline" className="text-base px-8" asChild>
+            <NavLink to="/login">
+              Login
+            </NavLink>
+          </Button>
         </div>
       </section>
 
@@ -252,7 +223,7 @@ export default function Home() {
             Join thousands of developers who trust DevTools for their daily workflow.
           </p>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button size="lg" variant="secondary" className="text-base px-8" asChild>
             <NavLink to="/tools/json-viewer">

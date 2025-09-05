@@ -26,7 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useDemo } from "@/contexts/DemoContext";
+import { useAuth } from "@/contexts/AuthContext"; // Replace useDemo with useAuth
 
 interface SidebarProps {
   isOpen: boolean;
@@ -82,7 +82,7 @@ const hubItems = [
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const location = useLocation();
-  const { user } = useDemo();
+  const { session } = useAuth(); // Replace user with session
   const [openCategories, setOpenCategories] = useState<string[]>(["Text & Data", "Productivity"]);
 
   const toggleCategory = (category: string) => {
@@ -102,12 +102,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     <>
       {/* Mobile overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={onClose}
         />
       )}
-      
+
       {/* Sidebar */}
       <aside className={cn(
         "fixed left-0 top-16 z-50 h-[calc(100vh-4rem)] w-64 bg-sidebar border-r border-sidebar-border transition-transform duration-300 lg:translate-x-0",
@@ -116,7 +116,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <nav className="h-full overflow-y-auto p-4 space-y-6">
           {/* Main Navigation */}
           <div className="space-y-2">
-            {(user ? authenticatedNavItems : publicNavItems).map((item) => (
+            {(session ? authenticatedNavItems : publicNavItems).map((item) => (
               <NavLink
                 key={item.href}
                 to={item.href}
@@ -179,7 +179,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
 
           {/* Hubs */}
-          {user && (
+          {session && (
             <div>
               <h3 className="px-3 mb-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Hubs

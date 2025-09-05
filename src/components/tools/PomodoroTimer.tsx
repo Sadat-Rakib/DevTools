@@ -9,7 +9,6 @@ import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { supabase } from '@/integrations/supabase/client';
 import { useDemo } from '@/contexts/DemoContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';

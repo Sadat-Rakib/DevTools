@@ -25,7 +25,6 @@ import {
   ExternalLink,
   Copy
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useDemo } from '@/contexts/DemoContext';
 import { toast } from 'sonner';
 

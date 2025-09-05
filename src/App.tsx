@@ -2,12 +2,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
-import { DemoProvider } from "@/contexts/DemoContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext"; // Add this import
 import Home from "./pages/Home";
 import Pricing from "./pages/Pricing";
-import DemoDashboard from "./pages/DemoDashboard";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
@@ -30,54 +30,198 @@ import MediaHub from "./pages/MediaHub";
 import MarketingHub from "./pages/MarketingHub";
 import CareerHub from "./pages/CareerHub";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 const queryClient = new QueryClient();
 
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { session } = useAuth(); // This now works with the added import
+  if (!session) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <DemoProvider>
+    <AuthProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Home />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/contact-sales" element={<ContactSales />} />
-            
-            {/* Demo dashboard */}
-            <Route path="/demo-dashboard" element={<Layout><DemoDashboard /></Layout>} />
-            
-            {/* App routes - no authentication required */}
-            <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-            <Route path="/profile" element={<Layout><Profile /></Layout>} />
-            <Route path="/settings" element={<Layout><Settings /></Layout>} />
-            <Route path="/billing" element={<Layout><Billing /></Layout>} />
-            
-            <Route path="/tools/json-viewer" element={<Layout><JsonViewerPage /></Layout>} />
-            <Route path="/tools/base64" element={<Layout><Base64Page /></Layout>} />
-            <Route path="/tools/uuid" element={<Layout><UuidPage /></Layout>} />
-            <Route path="/tools/hash" element={<Layout><HashPage /></Layout>} />
-            <Route path="/tools/timestamp" element={<Layout><TimestampPage /></Layout>} />
-            <Route path="/tools/todo" element={<Layout><TodoPage /></Layout>} />
-            <Route path="/tools/pomodoro" element={<Layout><PomodoroPage /></Layout>} />
-            <Route path="/tools/sql-formatter" element={<Layout><SqlFormatterPage /></Layout>} />
-            
-            <Route path="/ai-assistant" element={<Layout><AIAssistantPage /></Layout>} />
-            <Route path="/assets" element={<Layout><AssetsLibraryPage /></Layout>} />
-            <Route path="/prompts" element={<Layout><PromptVault /></Layout>} />
-            <Route path="/resources" element={<Layout><Resources /></Layout>} />
-            <Route path="/workflows" element={<Layout><Workflows /></Layout>} />
-            <Route path="/media" element={<Layout><MediaHub /></Layout>} />
-            <Route path="/marketing" element={<Layout><MarketingHub /></Layout>} />
-            <Route path="/career" element={<Layout><CareerHub /></Layout>} />
-            
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+
+            {/* Protected routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Layout><Dashboard /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Layout><Profile /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Layout><Settings /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/billing"
+              element={
+                <ProtectedRoute>
+                  <Layout><Billing /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tools/json-viewer"
+              element={
+                <ProtectedRoute>
+                  <Layout><JsonViewerPage /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tools/base64"
+              element={
+                <ProtectedRoute>
+                  <Layout><Base64Page /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tools/uuid"
+              element={
+                <ProtectedRoute>
+                  <Layout><UuidPage /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tools/hash"
+              element={
+                <ProtectedRoute>
+                  <Layout><HashPage /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tools/timestamp"
+              element={
+                <ProtectedRoute>
+                  <Layout><TimestampPage /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tools/todo"
+              element={
+                <ProtectedRoute>
+                  <Layout><TodoPage /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tools/pomodoro"
+              element={
+                <ProtectedRoute>
+                  <Layout><PomodoroPage /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tools/sql-formatter"
+              element={
+                <ProtectedRoute>
+                  <Layout><SqlFormatterPage /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ai-assistant"
+              element={
+                <ProtectedRoute>
+                  <Layout><AIAssistantPage /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/assets"
+              element={
+                <ProtectedRoute>
+                  <Layout><AssetsLibraryPage /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/prompts"
+              element={
+                <ProtectedRoute>
+                  <Layout><PromptVault /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/resources"
+              element={
+                <ProtectedRoute>
+                  <Layout><Resources /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workflows"
+              element={
+                <ProtectedRoute>
+                  <Layout><Workflows /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/media"
+              element={
+                <ProtectedRoute>
+                  <Layout><MediaHub /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/marketing"
+              element={
+                <ProtectedRoute>
+                  <Layout><MarketingHub /></Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/career"
+              element={
+                <ProtectedRoute>
+                  <Layout><CareerHub /></Layout>
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
-    </DemoProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
