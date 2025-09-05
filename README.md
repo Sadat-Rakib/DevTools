@@ -68,49 +68,57 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 Ignite the dev server:
 bashnpm run dev
 
+---
 
-Usage
+## Usage
 
-Sign up or log in to unlock your personalized toolkit.
-Explore "Core Tools" or dive into productivity hubs.
-Track your dominance on the dashboard.
+- Sign up or log in to unlock your personalized toolkit.
+- Explore "Core Tools" or dive into productivity hubs.
+- Track your dominance on the dashboard.
+
+---
+
+## 🛠️ Dev Mode: Assemble!
+
+- Fork the Repo: Grab your copy and spawn a feature branch.
+- Run Tests: Keep it clean with npm test.
+- Drop a PR: Check Contributing Guidelines and submit like a pro.
+
+---
+
+## Build & Deploy
+
+- Build for production: npm run build
+- Launch on Vercel, Netlify, or your platform of choice.
 
 
-🛠️ Dev Mode: Assemble!
-
-Fork the Repo: Grab your copy and spawn a feature branch.
-Run Tests: Keep it clean with npm test.
-Drop a PR: Check Contributing Guidelines and submit like a pro.
-
-Build & Deploy
-
-Build for production: npm run build
-Launch on Vercel, Netlify, or your platform of choice.
-
-
-📈 Metrics That Matter
+## 📈 Metrics That Matter
 
 Adoption: 22 developers are already wielding this beast, with hype spreading fast.
 User Love: A stellar 95% satisfaction rate—rave reviews on UI and productivity boosts.
 Performance Beast: Sub-200ms load times, optimized for FAANG-scale onslaughts.
 
+---
 
-🤝 Join the Rebellion
+## 🤝 Join the Rebellion
 We’re recruiting code warriors! Here’s how to contribute:
 
-Fork the repo.
-Craft a feature branch (git checkout -b feature/epic-upgrade).
-Commit your genius (git commit -m "Add epic upgrade").
-Push it live (git push origin feature/epic-upgrade).
-Open a PR and let’s review!
+- Fork the repo.
+- Craft a feature branch (git checkout -b feature/epic-upgrade).
+- Commit your genius (git commit -m "Add epic upgrade").
+- Push it live (git push origin feature/epic-upgrade).
+- Open a PR and let’s review!
 
-Check our Code of Conduct and Contributing Guidelines for the playbook.
+- Check our Code of Conduct and Contributing Guidelines for the playbook.
 
-📜 License
+---
+
+## 📜 License
 MIT License—see LICENSE for the fine print.
 
-🌟 Fuel the Fire
+## 🌟 Fuel the Fire
 Love DevTools Platform? Star it ⭐ and spread the word! Join our Discord to team up and shape the future.
 
 🙌 Shoutouts
 Inspired by the trailblazers at GitHub Copilot and Notion AI. Built with passion by the DevTools crew and a global army of contributors.
+
