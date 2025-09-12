@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDemo } from '@/contexts/DemoContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { supabase } from '@/lib/supabase'; // Ensure this import works
 
 interface Todo {
   id: string;
@@ -51,10 +52,11 @@ const statusColors = {
 };
 
 export function TodoManager() {
-  const { user } = useDemo();
+  const { user, isGuest } = useDemo();
+  const isDemoMode = user?.isDemo || isGuest;
   const [todos, setTodos] = useState<Todo[]>([]);
   const [projects, setProjects] = useState<TodoProject[]>([]);
-  const [selectedProject, setSelectedProject] = useState<string>('all');
+  const [selectedProject, setSelectedProject] = useState<string>('none'); // Changed to 'none' as default
   const [isAddingTodo, setIsAddingTodo] = useState(false);
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
@@ -66,7 +68,7 @@ export function TodoManager() {
     priority: 'medium' as const,
     due_date: '',
     tags: [] as string[],
-    project_id: ''
+    project_id: 'none' // Default to 'none' instead of ''
   });
 
   const [newProject, setNewProject] = useState({
@@ -76,164 +78,220 @@ export function TodoManager() {
   });
 
   useEffect(() => {
-    if (user) {
+    if (user || isGuest) {
       loadTodos();
       loadProjects();
     }
-  }, [user]);
+  }, [user, isGuest]);
 
   const loadTodos = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('todos')
-        .select('*')
-        .order('order_index', { ascending: true })
-        .order('created_at', { ascending: false });
+    setLoading(true);
+    if (isDemoMode) {
+      const storedTodos = localStorage.getItem('demo-todos');
+      setTodos(storedTodos ? JSON.parse(storedTodos) : []);
+    } else {
+      try {
+        const { data, error } = await supabase
+          .from('todos')
+          .select('*')
+          .order('order_index', { ascending: true })
+          .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setTodos((data || []) as Todo[]);
-    } catch (error) {
-      console.error('Error loading todos:', error);
-      toast.error('Failed to load todos');
-    } finally {
-      setLoading(false);
+        if (error) throw error;
+        setTodos((data || []) as Todo[]);
+      } catch (error) {
+        console.error('Error loading todos:', error);
+        toast.error('Failed to load todos');
+      }
     }
+    setLoading(false);
   };
 
   const loadProjects = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('todo_projects')
-        .select('*')
-        .eq('is_archived', false)
-        .order('created_at', { ascending: false });
+    if (isDemoMode) {
+      const storedProjects = localStorage.getItem('demo-projects');
+      setProjects(storedProjects ? JSON.parse(storedProjects) : []);
+    } else {
+      try {
+        const { data, error } = await supabase
+          .from('todo_projects')
+          .select('*')
+          .eq('is_archived', false)
+          .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error loading projects:', error);
-      toast.error('Failed to load projects');
+        if (error) throw error;
+        setProjects(data || []);
+      } catch (error) {
+        console.error('Error loading projects:', error);
+        toast.error('Failed to load projects');
+      }
     }
   };
 
   const createTodo = async () => {
     if (!newTodo.title.trim()) return;
 
-    try {
-      const { data, error } = await supabase
-        .from('todos')
-        .insert({
-          title: newTodo.title,
-          description: newTodo.description || null,
-          priority: newTodo.priority,
-          due_date: newTodo.due_date || null,
-          tags: newTodo.tags.length > 0 ? newTodo.tags : null,
-          project_id: newTodo.project_id || null,
-          user_id: user!.id,
-          order_index: todos.length
-        })
-        .select()
-        .single();
+    const newTodoItem: Todo = {
+      id: crypto.randomUUID(),
+      title: newTodo.title,
+      description: newTodo.description || undefined,
+      status: 'todo',
+      priority: newTodo.priority,
+      due_date: newTodo.due_date || undefined,
+      tags: newTodo.tags.length > 0 ? newTodo.tags : undefined,
+      project_id: newTodo.project_id === 'none' ? undefined : newTodo.project_id,
+      order_index: todos.length,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
 
-      if (error) throw error;
+    if (isDemoMode) {
+      const updatedTodos = [...todos, newTodoItem];
+      setTodos(updatedTodos);
+      localStorage.setItem('demo-todos', JSON.stringify(updatedTodos));
+      toast.success('Todo created (demo mode)');
+    } else {
+      try {
+        const { data, error } = await supabase
+          .from('todos')
+          .insert({
+            ...newTodoItem,
+            user_id: user!.id
+          })
+          .select()
+          .single();
 
-      setTodos([...todos, data as Todo]);
-      setNewTodo({
-        title: '',
-        description: '',
-        priority: 'medium',
-        due_date: '',
-        tags: [],
-        project_id: ''
-      });
-      setIsAddingTodo(false);
-      toast.success('Todo created successfully');
-    } catch (error) {
-      console.error('Error creating todo:', error);
-      toast.error('Failed to create todo');
+        if (error) throw error;
+        setTodos([...todos, data as Todo]);
+        toast.success('Todo created successfully');
+      } catch (error) {
+        console.error('Error creating todo:', error);
+        toast.error('Failed to create todo');
+      }
     }
+
+    setNewTodo({
+      title: '',
+      description: '',
+      priority: 'medium',
+      due_date: '',
+      tags: [],
+      project_id: 'none'
+    });
+    setIsAddingTodo(false);
   };
 
   const createProject = async () => {
     if (!newProject.name.trim()) return;
 
-    try {
-      const { data, error } = await supabase
-        .from('todo_projects')
-        .insert({
-          name: newProject.name,
-          description: newProject.description || null,
-          color: newProject.color,
-          user_id: user!.id
-        })
-        .select()
-        .single();
+    const newProjectItem: TodoProject = {
+      id: crypto.randomUUID(),
+      name: newProject.name,
+      description: newProject.description || undefined,
+      color: newProject.color,
+      is_archived: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
 
-      if (error) throw error;
+    if (isDemoMode) {
+      const updatedProjects = [...projects, newProjectItem];
+      setProjects(updatedProjects);
+      localStorage.setItem('demo-projects', JSON.stringify(updatedProjects));
+      toast.success('Project created (demo mode)');
+    } else {
+      try {
+        const { data, error } = await supabase
+          .from('todo_projects')
+          .insert({
+            ...newProjectItem,
+            user_id: user!.id
+          })
+          .select()
+          .single();
 
-      setProjects([...projects, data]);
-      setNewProject({
-        name: '',
-        description: '',
-        color: '#3b82f6'
-      });
-      setIsAddingProject(false);
-      toast.success('Project created successfully');
-    } catch (error) {
-      console.error('Error creating project:', error);
-      toast.error('Failed to create project');
+        if (error) throw error;
+        setProjects([...projects, data]);
+        toast.success('Project created successfully');
+      } catch (error) {
+        console.error('Error creating project:', error);
+        toast.error('Failed to create project');
+      }
     }
+
+    setNewProject({
+      name: '',
+      description: '',
+      color: '#3b82f6'
+    });
+    setIsAddingProject(false);
   };
 
   const updateTodo = async (id: string, updates: Partial<Todo>) => {
-    try {
-      const { error } = await supabase
-        .from('todos')
-        .update(updates)
-        .eq('id', id);
+    const updatedItem = { ...updates, updated_at: new Date().toISOString() };
 
-      if (error) throw error;
-
-      setTodos(todos.map(todo => 
-        todo.id === id ? { ...todo, ...updates } : todo
-      ));
-      
+    if (isDemoMode) {
+      const updatedTodos = todos.map(todo =>
+        todo.id === id ? { ...todo, ...updatedItem } : todo
+      );
+      setTodos(updatedTodos);
+      localStorage.setItem('demo-todos', JSON.stringify(updatedTodos));
       if (updates.status === 'done') {
-        toast.success('Todo completed!');
+        toast.success('Todo completed (demo mode)!');
       }
-    } catch (error) {
-      console.error('Error updating todo:', error);
-      toast.error('Failed to update todo');
+    } else {
+      try {
+        const { error } = await supabase
+          .from('todos')
+          .update(updatedItem)
+          .eq('id', id);
+
+        if (error) throw error;
+        setTodos(todos.map(todo =>
+          todo.id === id ? { ...todo, ...updatedItem } : todo
+        ));
+        if (updates.status === 'done') {
+          toast.success('Todo completed!');
+        }
+      } catch (error) {
+        console.error('Error updating todo:', error);
+        toast.error('Failed to update todo');
+      }
     }
   };
 
   const deleteTodo = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('todos')
-        .delete()
-        .eq('id', id);
+    if (isDemoMode) {
+      const updatedTodos = todos.filter(todo => todo.id !== id);
+      setTodos(updatedTodos);
+      localStorage.setItem('demo-todos', JSON.stringify(updatedTodos));
+      toast.success('Todo deleted (demo mode)');
+    } else {
+      try {
+        const { error } = await supabase
+          .from('todos')
+          .delete()
+          .eq('id', id);
 
-      if (error) throw error;
-
-      setTodos(todos.filter(todo => todo.id !== id));
-      toast.success('Todo deleted');
-    } catch (error) {
-      console.error('Error deleting todo:', error);
-      toast.error('Failed to delete todo');
+        if (error) throw error;
+        setTodos(todos.filter(todo => todo.id !== id));
+        toast.success('Todo deleted');
+      } catch (error) {
+        console.error('Error deleting todo:', error);
+        toast.error('Failed to delete todo');
+      }
     }
   };
 
   const toggleTodoStatus = (todo: Todo) => {
-    const newStatus = todo.status === 'done' ? 'todo' : 
-                     todo.status === 'todo' ? 'in_progress' : 'done';
+    const newStatus = todo.status === 'done' ? 'todo' :
+      todo.status === 'todo' ? 'in_progress' : 'done';
     updateTodo(todo.id, { status: newStatus });
   };
 
   const filteredTodos = todos.filter(todo => {
+    if (selectedProject === 'none') return !todo.project_id; // 'none' means no project
     if (selectedProject === 'all') return true;
-    if (selectedProject === 'no-project') return !todo.project_id;
     return todo.project_id === selectedProject;
   });
 
@@ -243,7 +301,7 @@ export function TodoManager() {
     done: filteredTodos.filter(t => t.status === 'done')
   };
 
-  if (!user) {
+  if (!user && !isGuest) {
     return (
       <Card className="mx-auto max-w-md">
         <CardContent className="pt-6 text-center">
@@ -255,13 +313,11 @@ export function TodoManager() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
         <div>
           <h2 className="text-2xl font-bold">Todo Manager</h2>
           <p className="text-muted-foreground">Organize your tasks and boost productivity</p>
         </div>
-
         <div className="flex gap-2">
           <Dialog open={isAddingProject} onOpenChange={setIsAddingProject}>
             <DialogTrigger asChild>
@@ -311,7 +367,6 @@ export function TodoManager() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-
           <Dialog open={isAddingTodo} onOpenChange={setIsAddingTodo}>
             <DialogTrigger asChild>
               <Button>
@@ -363,7 +418,7 @@ export function TodoManager() {
                         <SelectValue placeholder="No project" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">No project</SelectItem>
+                        <SelectItem value="none">No project</SelectItem> {/* Changed to 'none' */}
                         {projects.map((project) => (
                           <SelectItem key={project.id} value={project.id}>
                             {project.name}
@@ -393,8 +448,6 @@ export function TodoManager() {
           </Dialog>
         </div>
       </div>
-
-      {/* Project Filter */}
       <div className="flex gap-2 overflow-x-auto pb-2">
         <Button
           variant={selectedProject === 'all' ? 'default' : 'outline'}
@@ -404,9 +457,9 @@ export function TodoManager() {
           All Tasks
         </Button>
         <Button
-          variant={selectedProject === 'no-project' ? 'default' : 'outline'}
+          variant={selectedProject === 'none' ? 'default' : 'outline'} // Updated to 'none'
           size="sm"
-          onClick={() => setSelectedProject('no-project')}
+          onClick={() => setSelectedProject('none')}
         >
           No Project
         </Button>
@@ -426,14 +479,11 @@ export function TodoManager() {
           </Button>
         ))}
       </div>
-
-      {/* Todo List - Kanban Style */}
       <Tabs defaultValue="kanban" className="w-full">
         <TabsList>
           <TabsTrigger value="kanban">Kanban Board</TabsTrigger>
           <TabsTrigger value="list">List View</TabsTrigger>
         </TabsList>
-
         <TabsContent value="kanban">
           <div className="grid md:grid-cols-3 gap-6">
             {Object.entries(todosByStatus).map(([status, statusTodos]) => (
@@ -478,11 +528,9 @@ export function TodoManager() {
                             </Button>
                           </div>
                         </div>
-                        
                         {todo.description && (
                           <p className="text-sm text-muted-foreground mb-2">{todo.description}</p>
                         )}
-                        
                         <div className="flex flex-wrap gap-2 text-xs">
                           {project && (
                             <Badge variant="outline" style={{ color: project.color }}>
@@ -510,7 +558,6 @@ export function TodoManager() {
             ))}
           </div>
         </TabsContent>
-
         <TabsContent value="list">
           <div className="space-y-2">
             {filteredTodos.map((todo) => {
@@ -529,7 +576,6 @@ export function TodoManager() {
                           <Square className="h-5 w-5" />
                         )}
                       </div>
-                      
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <span className={todo.status === 'done' ? 'line-through text-muted-foreground' : 'font-medium'}>
@@ -540,11 +586,9 @@ export function TodoManager() {
                             {todo.status.replace('_', ' ')}
                           </Badge>
                         </div>
-                        
                         {todo.description && (
                           <p className="text-sm text-muted-foreground mt-1">{todo.description}</p>
                         )}
-                        
                         <div className="flex flex-wrap gap-2 mt-2">
                           {project && (
                             <Badge variant="outline" style={{ color: project.color }}>
@@ -566,7 +610,6 @@ export function TodoManager() {
                         </div>
                       </div>
                     </div>
-                    
                     <div className="flex gap-1">
                       <Button
                         variant="ghost"
@@ -590,7 +633,6 @@ export function TodoManager() {
           </div>
         </TabsContent>
       </Tabs>
-
       {filteredTodos.length === 0 && !loading && (
         <Card className="p-8 text-center">
           <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

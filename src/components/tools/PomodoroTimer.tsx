@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDemo } from '@/contexts/DemoContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { supabase } from '@/lib/supabase'; // Ensure this import works
 
 interface PomodoroSession {
   id: string;
@@ -47,7 +48,8 @@ const defaultSettings: PomodoroSettings = {
 type TimerType = 'work' | 'short_break' | 'long_break';
 
 export function PomodoroTimer() {
-  const { user } = useDemo();
+  const { user, isGuest } = useDemo();
+  const isDemoMode = user?.isDemo || isGuest;
   const [settings, setSettings] = useState<PomodoroSettings>(defaultSettings);
   const [timerType, setTimerType] = useState<TimerType>('work');
   const [timeLeft, setTimeLeft] = useState(settings.workDuration * 60);
@@ -56,12 +58,11 @@ export function PomodoroTimer() {
   const [completedPomodoros, setCompletedPomodoros] = useState(0);
   const [sessions, setSessions] = useState<PomodoroSession[]>([]);
   const [currentTask, setCurrentTask] = useState('');
-  
+
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Load settings from localStorage
     const savedSettings = localStorage.getItem('pomodoroSettings');
     if (savedSettings) {
       const parsed = JSON.parse(savedSettings);
@@ -69,10 +70,10 @@ export function PomodoroTimer() {
       setTimeLeft(parsed.workDuration * 60);
     }
 
-    if (user) {
+    if (user || isGuest) {
       loadTodaySessions();
     }
-  }, [user]);
+  }, [user, isGuest]);
 
   useEffect(() => {
     if (isRunning) {
@@ -99,79 +100,102 @@ export function PomodoroTimer() {
   }, [isRunning]);
 
   const loadTodaySessions = async () => {
-    try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const { data, error } = await supabase
-        .from('pomodoro_sessions')
-        .select('*')
-        .gte('created_at', today.toISOString())
-        .order('created_at', { ascending: false });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString();
 
-      if (error) throw error;
-      
-      setSessions((data || []) as PomodoroSession[]);
-      setCompletedPomodoros(data?.filter(s => s.type === 'work' && s.completed).length || 0);
-    } catch (error) {
-      console.error('Error loading sessions:', error);
+    if (isDemoMode) {
+      const storedSessions = localStorage.getItem('demo-pomodoro-sessions');
+      const allSessions: PomodoroSession[] = storedSessions ? JSON.parse(storedSessions) : [];
+      const todaySessions = allSessions.filter(s => s.created_at >= todayStr);
+      setSessions(todaySessions);
+      setCompletedPomodoros(todaySessions.filter(s => s.type === 'work' && s.completed).length);
+    } else {
+      try {
+        const { data, error } = await supabase
+          .from('pomodoro_sessions')
+          .select('*')
+          .gte('created_at', todayStr)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        setSessions((data || []) as PomodoroSession[]);
+        setCompletedPomodoros(data?.filter(s => s.type === 'work' && s.completed).length || 0);
+      } catch (error) {
+        console.error('Error loading sessions:', error);
+      }
     }
   };
 
   const saveSession = async (type: TimerType, completed: boolean, taskDescription?: string) => {
-    if (!user) return;
+    if (!user && !isGuest) return;
 
-    try {
-      const session = {
-        type,
-        duration_minutes: getDurationForType(type),
-        completed,
-        task_description: taskDescription || null,
-        user_id: user.id,
-        started_at: new Date().toISOString(),
-        ended_at: completed ? new Date().toISOString() : null,
-      };
+    const session: PomodoroSession = {
+      id: crypto.randomUUID(),
+      type,
+      duration_minutes: getDurationForType(type),
+      completed,
+      task_description: taskDescription || undefined,
+      started_at: new Date().toISOString(),
+      ended_at: completed ? new Date().toISOString() : undefined,
+      created_at: new Date().toISOString()
+    };
 
-      const { data, error } = await supabase
-        .from('pomodoro_sessions')
-        .insert(session)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setSessions(prev => [data as PomodoroSession, ...prev]);
-      
+    if (isDemoMode) {
+      const storedSessions = localStorage.getItem('demo-pomodoro-sessions');
+      const allSessions: PomodoroSession[] = storedSessions ? JSON.parse(storedSessions) : [];
+      const updatedSessions = [session, ...allSessions];
+      localStorage.setItem('demo-pomodoro-sessions', JSON.stringify(updatedSessions));
+      setSessions(prev => [session, ...prev]);
       if (type === 'work' && completed) {
         setCompletedPomodoros(prev => prev + 1);
       }
-    } catch (error) {
-      console.error('Error saving session:', error);
-      toast.error('Failed to save session');
+      toast.success('Session saved (demo mode)');
+    } else {
+      try {
+        const { data, error } = await supabase
+          .from('pomodoro_sessions')
+          .insert({
+            ...session,
+            user_id: user!.id
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        setSessions(prev => [data as PomodoroSession, ...prev]);
+
+        if (type === 'work' && completed) {
+          setCompletedPomodoros(prev => prev + 1);
+        }
+      } catch (error) {
+        console.error('Error saving session:', error);
+        toast.error('Failed to save session');
+      }
     }
   };
 
   const handleTimerComplete = () => {
     setIsRunning(false);
-    
+
     if (settings.soundEnabled) {
       playNotificationSound();
     }
 
-    // Save completed session
     saveSession(timerType, true, timerType === 'work' ? currentTask : undefined);
 
     if (timerType === 'work') {
       toast.success('Pomodoro completed! Time for a break.');
-      
-      // Determine next break type
-      const nextBreakType = (completedPomodoros + 1) % settings.longBreakInterval === 0 
-        ? 'long_break' 
+
+      const nextBreakType = (completedPomodoros + 1) % settings.longBreakInterval === 0
+        ? 'long_break'
         : 'short_break';
-      
+
       setTimerType(nextBreakType);
       setTimeLeft(getDurationForType(nextBreakType) * 60);
-      
+
       if (settings.autoStartBreaks) {
         setIsRunning(true);
       }
@@ -180,13 +204,12 @@ export function PomodoroTimer() {
       setTimerType('work');
       setTimeLeft(settings.workDuration * 60);
       setCurrentTask('');
-      
+
       if (settings.autoStartPomodoros) {
         setIsRunning(true);
       }
     }
 
-    // Browser notification
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('Pomodoro Timer', {
         body: timerType === 'work' ? 'Work session completed!' : 'Break completed!',
@@ -204,28 +227,26 @@ export function PomodoroTimer() {
   };
 
   const playNotificationSound = () => {
-    // Create a simple beep sound using Web Audio API
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-    
+
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
-    
+
     oscillator.frequency.value = 800;
     oscillator.type = 'sine';
-    
+
     gainNode.gain.setValueAtTime(0, audioContext.currentTime);
     gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
     gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
-    
+
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.5);
   };
 
   const toggleTimer = () => {
     if (isRunning) {
-      // Save incomplete session when pausing
       saveSession(timerType, false, timerType === 'work' ? currentTask : undefined);
     }
     setIsRunning(!isRunning);
@@ -245,12 +266,11 @@ export function PomodoroTimer() {
   const saveSettings = (newSettings: PomodoroSettings) => {
     setSettings(newSettings);
     localStorage.setItem('pomodoroSettings', JSON.stringify(newSettings));
-    
-    // Update timer if not running
+
     if (!isRunning) {
       setTimeLeft(getDurationForType(timerType) * 60);
     }
-    
+
     setIsSettingsOpen(false);
     toast.success('Settings saved!');
   };
@@ -286,7 +306,7 @@ export function PomodoroTimer() {
 
   const TimerIcon = timerTypeIcons[timerType];
 
-  if (!user) {
+  if (!user && !isGuest) {
     return (
       <Card className="mx-auto max-w-md">
         <CardContent className="pt-6 text-center">
@@ -298,7 +318,6 @@ export function PomodoroTimer() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Timer Card */}
       <Card className="text-center">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -306,7 +325,6 @@ export function PomodoroTimer() {
               <TimerIcon className="h-6 w-6" />
               {timerTypeLabels[timerType]}
             </CardTitle>
-            
             <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
@@ -342,7 +360,6 @@ export function PomodoroTimer() {
                       />
                     </div>
                   </div>
-                  
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="long-break">Long Break (minutes)</Label>
@@ -367,7 +384,6 @@ export function PomodoroTimer() {
                       />
                     </div>
                   </div>
-
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="auto-start-breaks">Auto-start breaks</Label>
@@ -377,7 +393,6 @@ export function PomodoroTimer() {
                         onCheckedChange={(checked) => setSettings({ ...settings, autoStartBreaks: checked })}
                       />
                     </div>
-                    
                     <div className="flex items-center justify-between">
                       <Label htmlFor="auto-start-pomodoros">Auto-start work sessions</Label>
                       <Switch
@@ -386,7 +401,6 @@ export function PomodoroTimer() {
                         onCheckedChange={(checked) => setSettings({ ...settings, autoStartPomodoros: checked })}
                       />
                     </div>
-                    
                     <div className="flex items-center justify-between">
                       <Label htmlFor="sound-enabled">Sound notifications</Label>
                       <Switch
@@ -396,7 +410,6 @@ export function PomodoroTimer() {
                       />
                     </div>
                   </div>
-
                   <div>
                     <Button onClick={requestNotificationPermission} variant="outline" className="w-full">
                       Enable Browser Notifications
@@ -415,16 +428,12 @@ export function PomodoroTimer() {
             </Dialog>
           </div>
         </CardHeader>
-        
         <CardContent className="space-y-6">
-          {/* Timer Display */}
           <div className="space-y-4">
             <div className="text-6xl font-mono font-bold">
               {formatTime(timeLeft)}
             </div>
-            
             <Progress value={getProgressPercentage()} className="h-2" />
-            
             <div className="flex justify-center gap-2">
               <Badge variant={timerType === 'work' ? 'default' : 'outline'}>
                 Work
@@ -437,8 +446,6 @@ export function PomodoroTimer() {
               </Badge>
             </div>
           </div>
-
-          {/* Task Input for Work Sessions */}
           {timerType === 'work' && (
             <div>
               <Input
@@ -449,8 +456,6 @@ export function PomodoroTimer() {
               />
             </div>
           )}
-
-          {/* Timer Controls */}
           <div className="flex justify-center gap-4">
             <Button
               onClick={toggleTimer}
@@ -469,7 +474,6 @@ export function PomodoroTimer() {
                 </>
               )}
             </Button>
-            
             <Button
               onClick={resetTimer}
               variant="outline"
@@ -479,8 +483,6 @@ export function PomodoroTimer() {
               Reset
             </Button>
           </div>
-
-          {/* Timer Type Selector */}
           <div className="flex justify-center gap-2">
             <Button
               variant={timerType === 'work' ? 'default' : 'outline'}
@@ -509,10 +511,7 @@ export function PomodoroTimer() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Stats and History */}
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Today's Stats */}
         <Card>
           <CardHeader>
             <CardTitle>Today's Progress</CardTitle>
@@ -523,7 +522,6 @@ export function PomodoroTimer() {
                 <div className="text-3xl font-bold text-primary">{completedPomodoros}</div>
                 <div className="text-sm text-muted-foreground">Completed Pomodoros</div>
               </div>
-              
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                   <div className="text-lg font-semibold">
@@ -547,8 +545,6 @@ export function PomodoroTimer() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Recent Sessions */}
         <Card>
           <CardHeader>
             <CardTitle>Recent Sessions</CardTitle>
@@ -574,25 +570,23 @@ export function PomodoroTimer() {
                           </div>
                         )}
                       </div>
-                     </div>
-                     
-                     <div className="text-right">
-                       <div className="text-xs text-muted-foreground">
-                         {format(new Date(session.started_at), 'HH:mm')}
-                       </div>
-                       <div className="flex items-center gap-1">
-                         <Badge
-                           variant={session.completed ? 'default' : 'secondary'}
-                           className="text-xs"
-                         >
-                           {session.completed ? 'Completed' : 'Paused'}
-                         </Badge>
-                       </div>
-                     </div>
-                   </div>
-                 );
-               })}
-              
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-muted-foreground">
+                        {format(new Date(session.started_at), 'HH:mm')}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Badge
+                          variant={session.completed ? 'default' : 'secondary'}
+                          className="text-xs"
+                        >
+                          {session.completed ? 'Completed' : 'Paused'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
               {sessions.length === 0 && (
                 <div className="text-center text-muted-foreground py-4">
                   No sessions today yet. Start your first Pomodoro!
